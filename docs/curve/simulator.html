@@ -358,10 +358,16 @@
             return 'en';
         })();
 
-        let visibleCurves = {
-            'custom': true,
-            ...STANDARD_CURVES.reduce((acc, cur) => ({ ...acc, [cur.id]: true }), {})
-        };
+        let visibleCurves = (() => {
+            const saved = localStorage.getItem('heatpump_curves');
+            if (saved) {
+                return JSON.parse(saved);
+            }
+            return {
+                'custom': true,
+                ...STANDARD_CURVES.reduce((acc, cur) => ({ ...acc, [cur.id]: true }), {})
+            };
+        })();
 
         let customParams = {
             T1SETH1: 45,
@@ -705,6 +711,7 @@
 
         function toggleCurve(id) {
             visibleCurves[id] = !visibleCurves[id];
+            localStorage.setItem('heatpump_curves', JSON.stringify(visibleCurves));
 
             if (id === 'custom') {
                 const checkIcon = document.getElementById('check-custom');
@@ -726,6 +733,7 @@
 
         function toggleAll(show) {
             Object.keys(visibleCurves).forEach(k => visibleCurves[k] = show);
+            localStorage.setItem('heatpump_curves', JSON.stringify(visibleCurves));
 
             const checkIcon = document.getElementById('check-custom');
             if (show) {
@@ -818,9 +826,21 @@
             document.getElementById('yStep').value = axisConfig.yStep;
         }
 
+        function syncCustomCurveCheckbox() {
+            const checkIcon = document.getElementById('check-custom');
+            if (visibleCurves['custom']) {
+                checkIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
+                checkIcon.className = 'w-5 h-5 text-blue-600';
+            } else {
+                checkIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>';
+                checkIcon.className = 'w-5 h-5 text-slate-300';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             updateLanguageUI();
             syncAxisInputs();
+            syncCustomCurveCheckbox();
             updateTranslations();
             renderPresetButtons();
 
