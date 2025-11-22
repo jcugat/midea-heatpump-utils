@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heat Pump Curve Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        /* Remove spinner arrows from number inputs */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-800">
+    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+
+        <!-- Header -->
+        <div class="bg-slate-900 text-white p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+            <div>
+                <h1 class="text-2xl font-bold flex items-center gap-2">
+                    <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span id="header-title">Heat Pump Curve Simulator</span>
+                </h1>
+                <p class="text-slate-400 text-sm mt-1" id="header-subtitle">Interactive visualization of flow temperature vs outdoor temperature</p>
+            </div>
+
+            <!-- Settings Bar (Axis & Language) -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 bg-slate-800 p-4 rounded-lg border border-slate-700 overflow-x-auto">
+
+                <!-- X Axis Group -->
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-bold text-slate-400 uppercase mr-1" id="label-xaxis">X Axis</span>
+                    <div class="flex items-end gap-2">
+                        <div class="flex flex-col">
+                            <label class="text-xs font-bold mb-1 block text-slate-400" id="label-min-x">Min</label>
+                            <div class="flex items-center">
+                                <button onclick="adjustAxis('xMin', -1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-200 rounded-l border">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"></path></svg>
+                                </button>
+                                <input type="number" id="xMin" value="-20" onchange="updateAxisConfig('xMin', this.value)" class="h-8 text-center outline-none focus:ring-0 text-sm font-medium w-12 bg-slate-900 border-y border-slate-600 text-white">
+                                <button onclick="adjustAxis('xMin', 1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-200 rounded-r border">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-bold mb-1 block text-slate-400" id="label-max-x">Max</label>
+                            <div class="flex items-center">
+                                <button onclick="adjustAxis('xMax', -1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-200 rounded-l border">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"></path></svg>
+                                </button>
+                                <input type="number" id="xMax" value="40" onchange="updateAxisConfig('xMax', this.value)" class="h-8 text-center outline-none focus:ring-0 text-sm font-medium w-12 bg-slate-900 border-y border-slate-600 text-white">
+                                <button onclick="adjustAxis('xMax', 1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-200 rounded-r border">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ml-2">
+                            <div class="flex flex-col">
+                                <label class="text-xs font-bold mb-1 block text-slate-400" id="label-step-x">Step</label>
+                                <div class="flex items-center">
+                                    <button onclick="adjustAxis('xStep', -1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-200 rounded-l border">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"></path></svg>
+                                    </button>
+                                    <input type="number" id="xStep" value="5" onchange="updateAxisConfig('xStep', this.value)" class="h-8 text-center outline-none focus:ring-0 text-sm font-medium w-10 bg-slate-900 border-y border-slate-600 text-white">
+                                    <button onclick="adjustAxis('xStep', 1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-200 rounded-r border">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-px h-12 bg-slate-700 hidden sm:block"></div>
+
+                <!-- Y Axis Group -->
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-bold text-slate-400 uppercase mr-1" id="label-yaxis">Y Axis</span>
+                    <div class="flex items-end gap-2">
+                        <div class="flex flex-col">
+                            <label class="text-xs font-bold mb-1 block text-slate-400" id="label-min-y">Min</label>
+                            <div class="flex items-center">
+                                <button onclick="adjustAxis('yMin', -1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-200 rounded-l border">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"></path></svg>
+                                </button>
+                                <input type="number" id="yMin" value="10" onchange="updateAxisConfig('yMin', this.value)" class="h-8 text-center outline-none focus:ring-0 text-sm font-medium w-12 bg-slate-900 border-y border-slate-600 text-white">
+                                <button onclick="adjustAxis('yMin', 1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-200 rounded-r border">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-bold mb-1 block text-slate-400" id="label-max-y">Max</label>
+                            <div class="flex items-center">
+                                <button onclick="adjustAxis('yMax', -1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-200 rounded-l border">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"></path></svg>
+                                </button>
+                                <input type="number" id="yMax" value="70" onchange="updateAxisConfig('yMax', this.value)" class="h-8 text-center outline-none focus:ring-0 text-sm font-medium w-12 bg-slate-900 border-y border-slate-600 text-white">
+                                <button onclick="adjustAxis('yMax', 1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-200 rounded-r border">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ml-2">
+                            <div class="flex flex-col">
+                                <label class="text-xs font-bold mb-1 block text-slate-400" id="label-step-y">Step</label>
+                                <div class="flex items-center">
+                                    <button onclick="adjustAxis('yStep', -1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-200 rounded-l border">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"></path></svg>
+                                    </button>
+                                    <input type="number" id="yStep" value="10" onchange="updateAxisConfig('yStep', this.value)" class="h-8 text-center outline-none focus:ring-0 text-sm font-medium w-10 bg-slate-900 border-y border-slate-600 text-white">
+                                    <button onclick="adjustAxis('yStep', 1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-200 rounded-r border">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-px h-12 bg-slate-700 hidden sm:block"></div>
+
+                <!-- Language Group -->
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-bold text-slate-400 uppercase mr-1" id="label-language">Language</span>
+                    <div class="flex items-center bg-slate-900 rounded-lg border border-slate-600 p-1 h-10 mt-4 sm:mt-3.5">
+                        <button id="lang-en" onclick="setLanguage('en')" class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors h-full bg-blue-600 text-white">
+                            EN
+                        </button>
+                        <button id="lang-es" onclick="setLanguage('es')" class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors h-full text-slate-400 hover:text-white">
+                            ES
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-0">
+
+            <!-- Left Sidebar: Controls -->
+            <div class="p-6 bg-slate-50 border-r border-slate-200 lg:col-span-1 space-y-8 h-full overflow-y-auto lg:max-h-[calc(100vh-100px)]">
+
+                <!-- Custom Curve Config -->
+                <section>
+                    <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <span class="w-2 h-6 bg-blue-600 rounded-full"></span>
+                        <span id="label-custom-curve">Custom Curve</span>
+                    </h3>
+                    <div class="space-y-4 bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex flex-col">
+                                <label class="text-xs font-bold mb-1 block text-slate-500" id="label-T1SETH1">T1SETH1 (High)</label>
+                                <div class="flex items-center">
+                                    <button onclick="adjustParam('T1SETH1', -1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-600 rounded-l border">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"></path></svg>
+                                    </button>
+                                    <input type="number" id="T1SETH1" value="45" onchange="updateCustomParam('T1SETH1', this.value)" class="h-8 text-center outline-none focus:ring-0 text-sm font-medium w-full bg-white border-y border-slate-300 text-slate-900">
+                                    <button onclick="adjustParam('T1SETH1', 1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-600 rounded-r border">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-xs font-bold mb-1 block text-slate-500" id="label-T4H1">T4H1 (Low Out)</label>
+                                <div class="flex items-center">
+                                    <button onclick="adjustParam('T4H1', -1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-600 rounded-l border">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"></path></svg>
+                                    </button>
+                                    <input type="number" id="T4H1" value="-5" onchange="updateCustomParam('T4H1', this.value)" class="h-8 text-center outline-none focus:ring-0 text-sm font-medium w-full bg-white border-y border-slate-300 text-slate-900">
+                                    <button onclick="adjustParam('T4H1', 1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-600 rounded-r border">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex flex-col">
+                                <label class="text-xs font-bold mb-1 block text-slate-500" id="label-T1SETH2">T1SETH2 (Low)</label>
+                                <div class="flex items-center">
+                                    <button onclick="adjustParam('T1SETH2', -1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-600 rounded-l border">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"></path></svg>
+                                    </button>
+                                    <input type="number" id="T1SETH2" value="25" onchange="updateCustomParam('T1SETH2', this.value)" class="h-8 text-center outline-none focus:ring-0 text-sm font-medium w-full bg-white border-y border-slate-300 text-slate-900">
+                                    <button onclick="adjustParam('T1SETH2', 1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-600 rounded-r border">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-xs font-bold mb-1 block text-slate-500" id="label-T4H2">T4H2 (High Out)</label>
+                                <div class="flex items-center">
+                                    <button onclick="adjustParam('T4H2', -1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-600 rounded-l border">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"></path></svg>
+                                    </button>
+                                    <input type="number" id="T4H2" value="15" onchange="updateCustomParam('T4H2', this.value)" class="h-8 text-center outline-none focus:ring-0 text-sm font-medium w-full bg-white border-y border-slate-300 text-slate-900">
+                                    <button onclick="adjustParam('T4H2', 1)" class="w-8 h-8 flex items-center justify-center transition-colors focus:outline-none bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-600 rounded-r border">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 pt-2 cursor-pointer hover:bg-slate-50 p-1 rounded -ml-1" onclick="toggleCurve('custom')">
+                            <svg id="check-custom" class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="text-sm font-medium" id="label-show-custom">Show Custom Curve</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Standard Curves Config -->
+                <section>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                            <span class="w-2 h-6 bg-slate-400 rounded-full"></span>
+                            <span id="label-presets">Presets</span>
+                        </h3>
+                        <div class="text-xs space-x-2">
+                            <button onclick="toggleAll(true)" class="text-blue-600 hover:underline" id="btn-all">All</button>
+                            <span class="text-slate-300">|</span>
+                            <button onclick="toggleAll(false)" class="text-slate-500 hover:underline" id="btn-none">None</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2" id="preset-buttons">
+                        <!-- Preset buttons will be generated by JavaScript -->
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- Main Area: Graph & Live Data -->
+            <div class="lg:col-span-3 flex flex-col min-h-[600px]">
+
+                <!-- Graph Container -->
+                <div class="flex-1 bg-white p-4 md:p-8 relative">
+                    <div class="w-full h-[500px]">
+                        <canvas id="myChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- External Data Display Panel -->
+                <div class="bg-slate-50 border-t border-slate-200 p-6">
+                    <h4 class="text-sm font-bold text-slate-500 uppercase mb-4 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path>
+                        </svg>
+                        <span id="label-current-values">Current Values at</span>
+                        <span id="current-temp">--</span>°C
+                    </h4>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4" id="values-grid">
+                        <!-- Value cards will be generated by JavaScript -->
+                    </div>
+
+                    <div id="instruction-text" class="text-slate-400 text-sm italic mt-2">
+                        <!-- Instruction text will be set by JavaScript -->
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- Constants & Configuration ---
+        const TRANSLATIONS = {
+            en: {
+                title: "Heat Pump Curve Simulator",
+                subtitle: "Interactive visualization of flow temperature vs outdoor temperature",
+                xAxis: "X Axis",
+                yAxis: "Y Axis",
+                language: "Language",
+                min: "Min",
+                max: "Max",
+                step: "Step",
+                customCurve: "Custom Curve",
+                showCustom: "Show Custom Curve",
+                presets: "Presets",
+                all: "All",
+                none: "None",
+                xAxisLabel: "Outdoor Temperature (°C)",
+                yAxisLabel: "Water Temperature (°C)",
+                currentValues: "Current Values at",
+                customSet: "Custom Set",
+                instruction: "Tap or hover over the graph to see specific temperature values.",
+                params: {
+                    T1SETH1: "T1SETH1 (High)",
+                    T4H1: "T4H1 (Low Out)",
+                    T1SETH2: "T1SETH2 (Low)",
+                    T4H2: "T4H2 (High Out)"
+                }
+            },
+            es: {
+                title: "Simulador Curva Calefacción",
+                subtitle: "Visualización interactiva de temperatura de impulsión vs temperatura exterior",
+                xAxis: "Eje X",
+                yAxis: "Eje Y",
+                language: "Idioma",
+                min: "Mín",
+                max: "Máx",
+                step: "Paso",
+                customCurve: "Curva Personalizada",
+                showCustom: "Mostrar Personalizada",
+                presets: "Preajustes",
+                all: "Todas",
+                none: "Ninguna",
+                xAxisLabel: "Temperatura Exterior (°C)",
+                yAxisLabel: "Temperatura del Agua (°C)",
+                currentValues: "Valores actuales a",
+                customSet: "Personal",
+                instruction: "Toque o pase el cursor sobre el gráfico para ver valores.",
+                params: {
+                    T1SETH1: "T1SETH1 (Alta)",
+                    T4H1: "T4H1 (Ext. Baja)",
+                    T1SETH2: "T1SETH2 (Baja)",
+                    T4H2: "T4H2 (Ext. Alta)"
+                }
+            }
+        };
+
+        const STANDARD_CURVES = [
+            { id: '1-T1S', color: '#ef4444', low: { m: 0.175, b: 25 }, mid: { m: 0.25, b: 20 } },
+            { id: '2-T1S', color: '#f97316', low: { m: 0.35,  b: 30 }, mid: { m: 0.5,  b: 20 } },
+            { id: '3-T1S', color: '#d97706', low: { m: 0.525, b: 35 }, mid: { m: 0.75, b: 20 } },
+            { id: '4-T1S', color: '#16a34a', low: { m: 0.63,  b: 38 }, mid: { m: 0.9,  b: 20 } },
+            { id: '5-T1S', color: '#0d9488', low: { m: 0.875, b: 45 }, mid: { m: 1.25, b: 20 } },
+            { id: '6-T1S', color: '#0891b2', low: { m: 0.98,  b: 48 }, mid: { m: 1.4,  b: 20 } },
+            { id: '7-T1S', color: '#7c3aed', low: { m: 1.225, b: 55 }, mid: { m: 1.75, b: 20 } },
+            { id: '8-T1S', color: '#db2777', low: { m: 1.4,   b: 60 }, mid: { m: 2.0,  b: 20 } }
+        ];
+
+        const DATA_GEN_MIN = -50;
+        const DATA_GEN_MAX = 50;
+
+        // --- State ---
+        let currentLang = (() => {
+            const saved = localStorage.getItem('heatpump_lang');
+            if (saved && (saved === 'en' || saved === 'es')) return saved;
+            if (navigator.language.startsWith('es')) return 'es';
+            return 'en';
+        })();
+
+        let visibleCurves = {
+            'custom': true,
+            ...STANDARD_CURVES.reduce((acc, cur) => ({ ...acc, [cur.id]: true }), {})
+        };
+
+        let customParams = {
+            T1SETH1: 45,
+            T1SETH2: 25,
+            T4H1: -5,
+            T4H2: 15
+        };
+
+        let axisConfig = (() => {
+            const saved = localStorage.getItem('heatpump_axis');
+            if (saved) {
+                try {
+                    return JSON.parse(saved);
+                } catch (e) {
+                    return {
+                        xMin: -20,
+                        xMax: 40,
+                        xStep: 5,
+                        yMin: 10,
+                        yMax: 70,
+                        yStep: 10
+                    };
+                }
+            }
+            return {
+                xMin: -20,
+                xMax: 40,
+                xStep: 5,
+                yMin: 10,
+                yMax: 70,
+                yStep: 10
+            };
+        })();
+
+        let hoverData = null; // Will be initialized after DOMContentLoaded
+        let chart = null;
+
+        // --- Calculation Functions ---
+        function calculateStandard(temp, config) {
+            if (temp < 0) {
+                return config.low.m * (0 - temp) + config.low.b;
+            } else if (temp >= 0 && temp < 20) {
+                return config.mid.m * (20 - temp) + config.mid.b;
+            } else {
+                return 20;
+            }
+        }
+
+        function calculateCustom(temp) {
+            const { T1SETH1, T1SETH2, T4H1, T4H2 } = customParams;
+            if (temp <= T4H1) return T1SETH1;
+            if (temp >= T4H2) return T1SETH2;
+            const range = T4H2 - T4H1;
+            if (range === 0) return T1SETH1;
+            const progress = (temp - T4H1) / range;
+            return T1SETH1 - (progress * (T1SETH1 - T1SETH2));
+        }
+
+        function generateChartData() {
+            const data = [];
+            for (let t = DATA_GEN_MIN; t <= DATA_GEN_MAX; t += 1) {
+                const point = { temp: t };
+                point['Custom'] = Math.floor(calculateCustom(t) * 10) / 10;
+                STANDARD_CURVES.forEach(curve => {
+                    point[curve.id] = Math.floor(calculateStandard(t, curve) * 10) / 10;
+                });
+                data.push(point);
+            }
+            return data;
+        }
+
+        // --- Chart Setup ---
+
+        // Custom plugin to draw vertical reference line
+        const verticalLinePlugin = {
+            id: 'verticalLine',
+            afterDraw: (chart) => {
+                if (hoverData && chart.scales.x && chart.scales.y) {
+                    const ctx = chart.ctx;
+                    const x = chart.scales.x.getPixelForValue(hoverData.temp);
+                    const yAxis = chart.scales.y;
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(x, yAxis.top);
+                    ctx.lineTo(x, yAxis.bottom);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#0f172a';
+                    ctx.setLineDash([5, 5]);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        };
+
+        // Custom plugin to draw persistent dots at selected temperature
+        const persistentDotsPlugin = {
+            id: 'persistentDots',
+            afterDatasetsDraw: (chart) => {
+                if (hoverData && chart.scales.x && chart.scales.y && hoverData.data) {
+                    const ctx = chart.ctx;
+                    const x = chart.scales.x.getPixelForValue(hoverData.temp);
+
+                    ctx.save();
+
+                    // Draw dot for custom curve if visible
+                    if (visibleCurves['custom'] && hoverData.data['Custom'] !== undefined) {
+                        const y = chart.scales.y.getPixelForValue(hoverData.data['Custom']);
+                        ctx.beginPath();
+                        ctx.arc(x, y, 8, 0, 2 * Math.PI);
+                        ctx.fillStyle = '#2563eb';
+                        ctx.fill();
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 0;
+                        ctx.stroke();
+                    }
+
+                    // Draw dots for standard curves if visible
+                    STANDARD_CURVES.forEach(curve => {
+                        if (visibleCurves[curve.id] && hoverData.data[curve.id] !== undefined) {
+                            const y = chart.scales.y.getPixelForValue(hoverData.data[curve.id]);
+                            ctx.beginPath();
+                            ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                            ctx.fillStyle = curve.color;
+                            ctx.fill();
+                            ctx.strokeStyle = '#ffffff';
+                            ctx.lineWidth = 0;
+                            ctx.stroke();
+                        }
+                    });
+
+                    ctx.restore();
+                }
+            }
+        };
+
+        function createChart() {
+            const ctx = document.getElementById('myChart');
+            const chartData = generateChartData();
+
+            const datasets = [];
+
+            // Custom curve
+            if (visibleCurves['custom']) {
+                datasets.push({
+                    label: TRANSLATIONS[currentLang].customSet,
+                    data: chartData.map(d => ({ x: d.temp, y: d['Custom'] })),
+                    borderColor: '#2563eb',
+                    backgroundColor: '#2563eb',
+                    borderWidth: 4,
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    tension: 0
+                });
+            }
+
+            // Standard curves
+            STANDARD_CURVES.forEach(curve => {
+                if (visibleCurves[curve.id]) {
+                    datasets.push({
+                        label: curve.id,
+                        data: chartData.map(d => ({ x: d.temp, y: d[curve.id] })),
+                        borderColor: curve.color,
+                        backgroundColor: curve.color,
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 0,
+                        tension: 0
+                    });
+                }
+            });
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        },
+                        verticalLine: {}
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            min: axisConfig.xMin,
+                            max: axisConfig.xMax,
+                            ticks: {
+                                stepSize: axisConfig.xStep,
+                                color: '#64748b'
+                            },
+                            grid: {
+                                color: '#e2e8f0',
+                                drawBorder: false
+                            },
+                            title: {
+                                display: true,
+                                text: TRANSLATIONS[currentLang].xAxisLabel,
+                                color: '#64748b'
+                            }
+                        },
+                        y: {
+                            min: axisConfig.yMin,
+                            max: axisConfig.yMax,
+                            ticks: {
+                                stepSize: axisConfig.yStep,
+                                color: '#64748b'
+                            },
+                            grid: {
+                                color: '#e2e8f0',
+                                drawBorder: false
+                            },
+                            title: {
+                                display: true,
+                                text: TRANSLATIONS[currentLang].yAxisLabel,
+                                color: '#64748b'
+                            }
+                        }
+                    },
+                    onHover: (event, activeElements) => {
+                        if (activeElements.length > 0) {
+                            const dataIndex = activeElements[0].index;
+                            const temp = chartData[dataIndex].temp;
+                            updateHoverData(temp, chartData[dataIndex]);
+                            chart.draw();
+                        }
+                    },
+                    onClick: (event, activeElements) => {
+                        if (activeElements.length > 0) {
+                            const dataIndex = activeElements[0].index;
+                            const temp = chartData[dataIndex].temp;
+                            updateHoverData(temp, chartData[dataIndex]);
+                            chart.draw();
+                        }
+                    }
+                },
+                plugins: [verticalLinePlugin, persistentDotsPlugin]
+            });
+        }
+
+        // --- Update Functions ---
+        function updateHoverData(temp, data) {
+            hoverData = { temp, data };
+            renderHoverDataDisplay();
+        }
+
+        function renderHoverDataDisplay() {
+            if (!hoverData) return;
+
+            document.getElementById('current-temp').textContent = hoverData.temp;
+            document.getElementById('instruction-text').style.display = 'none';
+
+            const grid = document.getElementById('values-grid');
+            grid.innerHTML = '';
+
+            // Custom curve
+            if (visibleCurves['custom']) {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-3 rounded border border-blue-200 shadow-sm flex flex-col';
+                card.innerHTML = `
+                    <span class="text-xs font-bold text-blue-600 mb-1">${TRANSLATIONS[currentLang].customSet}</span>
+                    <span class="text-2xl font-mono font-bold text-slate-900">${hoverData.data['Custom']}°C</span>
+                `;
+                grid.appendChild(card);
+            }
+
+            // Standard curves
+            STANDARD_CURVES.forEach(curve => {
+                if (visibleCurves[curve.id]) {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-3 rounded border border-slate-200 shadow-sm flex flex-col';
+                    card.innerHTML = `
+                        <div class="flex items-center gap-2 mb-1">
+                            <div class="w-2 h-2 rounded-full" style="background-color: ${curve.color}"></div>
+                            <span class="text-xs font-bold text-slate-500">${curve.id}</span>
+                        </div>
+                        <span class="text-2xl font-mono font-bold text-slate-700">${hoverData.data[curve.id]}°C</span>
+                    `;
+                    grid.appendChild(card);
+                }
+            });
+        }
+
+        function updateTranslations() {
+            const t = TRANSLATIONS[currentLang];
+
+            document.getElementById('header-title').textContent = t.title;
+            document.getElementById('header-subtitle').textContent = t.subtitle;
+            document.getElementById('label-xaxis').textContent = t.xAxis;
+            document.getElementById('label-yaxis').textContent = t.yAxis;
+            document.getElementById('label-language').textContent = t.language;
+            document.getElementById('label-min-x').textContent = t.min;
+            document.getElementById('label-max-x').textContent = t.max;
+            document.getElementById('label-step-x').textContent = t.step;
+            document.getElementById('label-min-y').textContent = t.min;
+            document.getElementById('label-max-y').textContent = t.max;
+            document.getElementById('label-step-y').textContent = t.step;
+            document.getElementById('label-custom-curve').textContent = t.customCurve;
+            document.getElementById('label-show-custom').textContent = t.showCustom;
+            document.getElementById('label-presets').textContent = t.presets;
+            document.getElementById('btn-all').textContent = t.all;
+            document.getElementById('btn-none').textContent = t.none;
+            document.getElementById('label-current-values').textContent = t.currentValues;
+            document.getElementById('label-T1SETH1').textContent = t.params.T1SETH1;
+            document.getElementById('label-T4H1').textContent = t.params.T4H1;
+            document.getElementById('label-T1SETH2').textContent = t.params.T1SETH2;
+            document.getElementById('label-T4H2').textContent = t.params.T4H2;
+            document.getElementById('instruction-text').textContent = t.instruction;
+        }
+
+        // --- Event Handlers ---
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('heatpump_lang', lang);
+
+            document.getElementById('lang-en').className = lang === 'en'
+                ? 'px-3 py-1.5 rounded-md text-xs font-bold transition-colors h-full bg-blue-600 text-white'
+                : 'px-3 py-1.5 rounded-md text-xs font-bold transition-colors h-full text-slate-400 hover:text-white';
+
+            document.getElementById('lang-es').className = lang === 'es'
+                ? 'px-3 py-1.5 rounded-md text-xs font-bold transition-colors h-full bg-blue-600 text-white'
+                : 'px-3 py-1.5 rounded-md text-xs font-bold transition-colors h-full text-slate-400 hover:text-white';
+
+            updateTranslations();
+            createChart();
+        }
+
+        function toggleCurve(id) {
+            visibleCurves[id] = !visibleCurves[id];
+
+            if (id === 'custom') {
+                const checkIcon = document.getElementById('check-custom');
+                if (visibleCurves[id]) {
+                    checkIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
+                    checkIcon.className = 'w-5 h-5 text-blue-600';
+                } else {
+                    checkIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>';
+                    checkIcon.className = 'w-5 h-5 text-slate-300';
+                }
+            } else {
+                renderPresetButtons();
+            }
+
+            createChart();
+            // Re-render the hover data display with updated curve visibility
+            renderHoverDataDisplay();
+        }
+
+        function toggleAll(show) {
+            Object.keys(visibleCurves).forEach(k => visibleCurves[k] = show);
+
+            const checkIcon = document.getElementById('check-custom');
+            if (show) {
+                checkIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
+                checkIcon.className = 'w-5 h-5 text-blue-600';
+            } else {
+                checkIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>';
+                checkIcon.className = 'w-5 h-5 text-slate-300';
+            }
+
+            renderPresetButtons();
+            createChart();
+            // Re-render the hover data display with updated curve visibility
+            renderHoverDataDisplay();
+        }
+
+        function updateCustomParam(name, value) {
+            customParams[name] = parseFloat(value) || 0;
+
+            // Update hoverData with new calculated values
+            if (hoverData) {
+                const chartData = generateChartData();
+                const dataPoint = chartData.find(d => d.temp === hoverData.temp);
+                if (dataPoint) {
+                    hoverData.data = dataPoint;
+                }
+            }
+
+            createChart();
+            renderHoverDataDisplay();
+        }
+
+        function adjustParam(name, delta) {
+            const input = document.getElementById(name);
+            const newValue = Math.round((parseFloat(input.value) + delta) * 100) / 100;
+            input.value = newValue;
+            updateCustomParam(name, newValue);
+        }
+
+        function updateAxisConfig(name, value) {
+            axisConfig[name] = Number(value);
+            localStorage.setItem('heatpump_axis', JSON.stringify(axisConfig));
+            createChart();
+        }
+
+        function adjustAxis(name, delta) {
+            const input = document.getElementById(name);
+            const newValue = Math.round((parseFloat(input.value) + delta) * 100) / 100;
+            input.value = newValue;
+            updateAxisConfig(name, newValue);
+        }
+
+        function renderPresetButtons() {
+            const container = document.getElementById('preset-buttons');
+            container.innerHTML = '';
+
+            STANDARD_CURVES.forEach(curve => {
+                const button = document.createElement('button');
+                button.onclick = () => toggleCurve(curve.id);
+                button.className = visibleCurves[curve.id]
+                    ? 'flex items-center gap-2 p-2 rounded border text-sm transition-all bg-white border-slate-300 shadow-sm text-slate-800'
+                    : 'flex items-center gap-2 p-2 rounded border text-sm transition-all bg-slate-100 border-transparent text-slate-400 opacity-60 hover:opacity-100';
+
+                button.innerHTML = `
+                    <div class="w-3 h-3 rounded-full" style="background-color: ${curve.color}"></div>
+                    ${curve.id}
+                `;
+
+                container.appendChild(button);
+            });
+        }
+
+        // --- Initialization ---
+        function updateLanguageUI() {
+            document.getElementById('lang-en').className = currentLang === 'en'
+                ? 'px-3 py-1.5 rounded-md text-xs font-bold transition-colors h-full bg-blue-600 text-white'
+                : 'px-3 py-1.5 rounded-md text-xs font-bold transition-colors h-full text-slate-400 hover:text-white';
+
+            document.getElementById('lang-es').className = currentLang === 'es'
+                ? 'px-3 py-1.5 rounded-md text-xs font-bold transition-colors h-full bg-blue-600 text-white'
+                : 'px-3 py-1.5 rounded-md text-xs font-bold transition-colors h-full text-slate-400 hover:text-white';
+        }
+
+        function syncAxisInputs() {
+            document.getElementById('xMin').value = axisConfig.xMin;
+            document.getElementById('xMax').value = axisConfig.xMax;
+            document.getElementById('xStep').value = axisConfig.xStep;
+            document.getElementById('yMin').value = axisConfig.yMin;
+            document.getElementById('yMax').value = axisConfig.yMax;
+            document.getElementById('yStep').value = axisConfig.yStep;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateLanguageUI();
+            syncAxisInputs();
+            updateTranslations();
+            renderPresetButtons();
+
+            // Initialize hoverData with default temperature (0°C or middle of visible range)
+            const defaultTemp = 0;
+            const chartData = generateChartData();
+            const defaultDataPoint = chartData.find(d => d.temp === defaultTemp) || chartData[Math.floor(chartData.length / 2)];
+            hoverData = { temp: defaultDataPoint.temp, data: defaultDataPoint };
+
+            createChart();
+            renderHoverDataDisplay();
+        });
+    </script>
+</body>
+</html>
