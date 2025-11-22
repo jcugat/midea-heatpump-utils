@@ -369,12 +369,18 @@
             };
         })();
 
-        let customParams = {
-            T1SETH1: 45,
-            T1SETH2: 25,
-            T4H1: -5,
-            T4H2: 15
-        };
+        let customParams = (() => {
+            const saved = localStorage.getItem('heatpump_custom');
+            if (saved) {
+                return JSON.parse(saved);
+            }
+            return {
+                T1SETH1: 40,
+                T1SETH2: 35,
+                T4H1: -5,
+                T4H2: 7
+            };
+        })();
 
         let axisConfig = (() => {
             const saved = localStorage.getItem('heatpump_axis');
@@ -752,6 +758,7 @@
 
         function updateCustomParam(name, value) {
             customParams[name] = parseFloat(value) || 0;
+            localStorage.setItem('heatpump_custom', JSON.stringify(customParams));
 
             // Update hoverData with new calculated values
             if (hoverData) {
@@ -826,6 +833,13 @@
             document.getElementById('yStep').value = axisConfig.yStep;
         }
 
+        function syncCustomParamInputs() {
+            document.getElementById('T1SETH1').value = customParams.T1SETH1;
+            document.getElementById('T1SETH2').value = customParams.T1SETH2;
+            document.getElementById('T4H1').value = customParams.T4H1;
+            document.getElementById('T4H2').value = customParams.T4H2;
+        }
+
         function syncCustomCurveCheckbox() {
             const checkIcon = document.getElementById('check-custom');
             if (visibleCurves['custom']) {
@@ -840,6 +854,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             updateLanguageUI();
             syncAxisInputs();
+            syncCustomParamInputs();
             syncCustomCurveCheckbox();
             updateTranslations();
             renderPresetButtons();
