@@ -35,8 +35,23 @@
                 <p class="text-slate-400 text-sm mt-1" id="header-subtitle">Interactive visualization of flow temperature vs outdoor temperature</p>
             </div>
 
-            <!-- Settings Bar (Axis & Language) -->
+            <!-- Settings Bar (Language & Axis) -->
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 bg-slate-800 p-4 rounded-lg border border-slate-700 overflow-x-auto">
+
+                <!-- Language Group -->
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-bold text-slate-400 uppercase mr-1" id="label-language">Language</span>
+                    <div class="flex items-center bg-slate-900 rounded-lg border border-slate-600 p-1 h-10 mt-4 sm:mt-3.5">
+                        <button id="lang-en" onclick="setLanguage('en')" class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors h-full bg-blue-600 text-white">
+                            EN
+                        </button>
+                        <button id="lang-es" onclick="setLanguage('es')" class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors h-full text-slate-400 hover:text-white">
+                            ES
+                        </button>
+                    </div>
+                </div>
+
+                <div class="w-px h-12 bg-slate-700 hidden sm:block"></div>
 
                 <!-- X Axis Group -->
                 <div class="flex items-center gap-3">
@@ -127,21 +142,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="w-px h-12 bg-slate-700 hidden sm:block"></div>
-
-                <!-- Language Group -->
-                <div class="flex items-center gap-3">
-                    <span class="text-xs font-bold text-slate-400 uppercase mr-1" id="label-language">Language</span>
-                    <div class="flex items-center bg-slate-900 rounded-lg border border-slate-600 p-1 h-10 mt-4 sm:mt-3.5">
-                        <button id="lang-en" onclick="setLanguage('en')" class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors h-full bg-blue-600 text-white">
-                            EN
-                        </button>
-                        <button id="lang-es" onclick="setLanguage('es')" class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors h-full text-slate-400 hover:text-white">
-                            ES
-                        </button>
                     </div>
                 </div>
 
