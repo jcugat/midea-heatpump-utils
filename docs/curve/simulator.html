@@ -404,29 +404,24 @@
         })();
 
         let axisConfig = (() => {
+            const defaults = {
+                xMin: -25,
+                xMax: 25,
+                xStep: 5,
+                yMin: 20,
+                yMax: 60,
+                yStep: 10
+            };
+
             const saved = localStorage.getItem('heatpump_axis');
             if (saved) {
                 try {
                     return JSON.parse(saved);
                 } catch (e) {
-                    return {
-                        xMin: -20,
-                        xMax: 40,
-                        xStep: 5,
-                        yMin: 10,
-                        yMax: 70,
-                        yStep: 10
-                    };
+                    return defaults;
                 }
             }
-            return {
-                xMin: -20,
-                xMax: 40,
-                xStep: 5,
-                yMin: 10,
-                yMax: 70,
-                yStep: 10
-            };
+            return defaults;
         })();
 
         let hoverData = null; // Will be initialized after DOMContentLoaded
