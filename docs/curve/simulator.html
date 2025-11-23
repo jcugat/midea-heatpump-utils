@@ -771,7 +771,14 @@
         }
 
         function toggleAll(show) {
-            Object.keys(visibleCurves).forEach(k => visibleCurves[k] = show);
+            // Set custom curve
+            visibleCurves['custom'] = show;
+
+            // Set all standard curves
+            STANDARD_CURVES.forEach(curve => {
+                visibleCurves[curve.id] = show;
+            });
+
             localStorage.setItem('heatpump_curves', JSON.stringify(visibleCurves));
 
             const checkIcon = document.getElementById('check-custom');
