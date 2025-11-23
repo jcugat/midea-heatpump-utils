@@ -226,16 +226,20 @@
 
                 <!-- Standard Curves Config -->
                 <section>
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-bold text-slate-900 flex items-center gap-2">
-                            <span class="w-2 h-6 bg-slate-400 rounded-full"></span>
-                            <span id="label-presets">Presets</span>
-                        </h3>
-                        <div class="text-xs space-x-2">
-                            <button onclick="toggleAll(true)" class="text-blue-600 hover:underline" id="btn-all">All</button>
-                            <span class="text-slate-300">|</span>
-                            <button onclick="toggleAll(false)" class="text-slate-500 hover:underline" id="btn-none">None</button>
-                        </div>
+                    <h3 class="font-bold text-slate-900 flex items-center gap-2 mb-2">
+                        <span class="w-2 h-6 bg-slate-400 rounded-full"></span>
+                        <span id="label-presets">Presets</span>
+                    </h3>
+                    <div class="text-xs space-x-2 mb-4">
+                        <button onclick="toggleAll(true)" class="text-blue-600 hover:underline" id="btn-all">All</button>
+                        <span class="text-slate-300">|</span>
+                        <button onclick="toggleAll(false)" class="text-blue-600 hover:underline" id="btn-none">None</button>
+                        <span class="text-slate-300">|</span>
+                        <button onclick="toggleR290()" class="text-blue-600 hover:underline" id="btn-r290">R290</button>
+                        <span class="text-slate-300">|</span>
+                        <button onclick="toggleR32L()" class="text-blue-600 hover:underline" id="btn-r32l">R32L</button>
+                        <span class="text-slate-300">|</span>
+                        <button onclick="toggleR32H()" class="text-blue-600 hover:underline" id="btn-r32h">R32H</button>
                     </div>
 
                     <div class="grid grid-cols-2 gap-2" id="preset-buttons">
@@ -293,7 +297,7 @@
                 step: "Step",
                 customCurve: "Custom Curve",
                 showCustom: "Show Custom Curve",
-                presets: "Presets",
+                presets: "Curves",
                 all: "All",
                 none: "None",
                 xAxisLabel: "Outdoor Temperature (°C)",
@@ -319,9 +323,9 @@
                 step: "Paso",
                 customCurve: "Curva Personalizada",
                 showCustom: "Mostrar Personalizada",
-                presets: "Preajustes",
-                all: "Todas",
-                none: "Ninguna",
+                presets: "Curvas",
+                all: "Todo",
+                none: "Nada",
                 xAxisLabel: "Temperatura Exterior (°C)",
                 yAxisLabel: "Temperatura del Agua (°C)",
                 currentValues: "Valores actuales a",
@@ -766,28 +770,55 @@
         }
 
         function toggleAll(show) {
-            // Set custom curve
-            visibleCurves['custom'] = show;
-
-            // Set all standard curves
+            // Set all standard curves, keep custom as-is
             STANDARD_CURVES.forEach(curve => {
                 visibleCurves[curve.id] = show;
             });
 
             localStorage.setItem('heatpump_curves', JSON.stringify(visibleCurves));
 
-            const checkIcon = document.getElementById('check-custom');
-            if (show) {
-                checkIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
-                checkIcon.className = 'w-5 h-5 text-blue-600';
-            } else {
-                checkIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>';
-                checkIcon.className = 'w-5 h-5 text-slate-300';
-            }
-
             renderPresetButtons();
             createChart();
             // Re-render the hover data display with updated curve visibility
+            renderHoverDataDisplay();
+        }
+
+        function toggleR290() {
+            // Enable only R290 curves, disable R32 curves, keep custom as-is
+            STANDARD_CURVES.forEach(curve => {
+                visibleCurves[curve.id] = curve.id.startsWith('R290-');
+            });
+
+            localStorage.setItem('heatpump_curves', JSON.stringify(visibleCurves));
+
+            renderPresetButtons();
+            createChart();
+            renderHoverDataDisplay();
+        }
+
+        function toggleR32L() {
+            // Enable only R32 Low curves, disable others, keep custom as-is
+            STANDARD_CURVES.forEach(curve => {
+                visibleCurves[curve.id] = curve.id.includes('-Low');
+            });
+
+            localStorage.setItem('heatpump_curves', JSON.stringify(visibleCurves));
+
+            renderPresetButtons();
+            createChart();
+            renderHoverDataDisplay();
+        }
+
+        function toggleR32H() {
+            // Enable only R32 High curves, disable others, keep custom as-is
+            STANDARD_CURVES.forEach(curve => {
+                visibleCurves[curve.id] = curve.id.includes('-High');
+            });
+
+            localStorage.setItem('heatpump_curves', JSON.stringify(visibleCurves));
+
+            renderPresetButtons();
+            createChart();
             renderHoverDataDisplay();
         }
 
